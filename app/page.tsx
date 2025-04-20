@@ -20,30 +20,31 @@ export default function Home() {
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = speechSynthesis.getVoices();
-      // 先用語言碼篩選
       let filteredVoices = language
         ? availableVoices.filter((voice) => voice.lang.startsWith(language))
         : availableVoices;
-      // 如果語言篩選結果太少（如0），則用名稱關鍵字篩選
       if (language && filteredVoices.length === 0) {
         filteredVoices = availableVoices.filter((voice) =>
-          voice.name.toLowerCase().includes(language.toLowerCase())
+          voice.name.toLowerCase().includes(language.toLowerCase()) ||
+          voice.lang.toLowerCase().includes(language.toLowerCase())
         );
       }
-      // 若有額外名稱篩選，再進一步篩選
+      // iOS: 名稱可能為空，篩選時同時比對 name 和 lang
       const finalVoices = voiceFilter
         ? filteredVoices.filter((voice) =>
-          voice.name.toLowerCase().includes(voiceFilter.toLowerCase())
+          (voice.name && voice.name.toLowerCase().includes(voiceFilter.toLowerCase())) ||
+          (voice.lang && voice.lang.toLowerCase().includes(voiceFilter.toLowerCase()))
         )
         : filteredVoices;
       setVoices(finalVoices);
     };
 
+    loadVoices();
+    const timeoutId = setTimeout(loadVoices, 500);
     if (speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = loadVoices;
     }
-
-    loadVoices();
+    return () => clearTimeout(timeoutId);
   }, [language, voiceFilter]);
 
   useEffect(() => {
@@ -221,9 +222,9 @@ export default function Home() {
                   className="select select-bordered"
                   disabled={isSpeaking}
                 >
-                  {voices.map((voice) => (
-                    <option key={voice.name} value={voice.name}>
-                      {voice.name} ({voice.lang})
+                  {voices.map((voice, idx) => (
+                    <option key={voice.name + voice.lang + idx} value={voice.name || voice.lang || idx}>
+                      {(voice.name && voice.name.trim()) ? voice.name : `[No Name]`} ({voice.lang})
                     </option>
                   ))}
                 </select>
