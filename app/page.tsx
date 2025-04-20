@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { languageOptions } from "./language-options";
 
 export default function Home() {
@@ -8,6 +8,10 @@ export default function Home() {
   const [language, setLanguage] = useState<string>("");
   const [rate, setRate] = useState<number>(1);
   const [pitch, setPitch] = useState<number>(1);
+  const [text, setText] = useState<string>("");
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [highlight, setHighlight] = useState<{ start: number, end: number }>({ start: 0, end: 0 });
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     const loadVoices = () => {
@@ -25,6 +29,54 @@ export default function Home() {
     loadVoices();
   }, [language]);
 
+  const handleSpeak = () => {
+    if (!text) return;
+    const selectedVoice = voices.find(
+      (voice) => voice.name === (document.getElementById("voice-select") as HTMLSelectElement).value
+    );
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = selectedVoice || null;
+    utterance.lang = selectedVoice?.lang || "";
+    utterance.rate = rate;
+    utterance.pitch = pitch;
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setHighlight({ start: 0, end: 0 });
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setHighlight({ start: 0, end: 0 });
+    };
+    utterance.onboundary = (event: SpeechSynthesisEvent) => {
+      if (event.name === "word" || event.charIndex !== undefined) {
+        setHighlight({ start: event.charIndex, end: event.charIndex + event.charLength });
+      }
+    };
+
+    utteranceRef.current = utterance;
+    speechSynthesis.speak(utterance);
+  };
+
+  const handleStop = () => {
+    speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setHighlight({ start: 0, end: 0 });
+  };
+
+  // 將文字分割並高亮
+  const renderHighlightedText = () => {
+    if (!text) return null;
+    const { start, end } = highlight;
+    return (
+      <span>
+        {text.slice(0, start)}
+        <mark className="bg-yellow-300">{text.slice(start, end)}</mark>
+        {text.slice(end)}
+      </span>
+    );
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="shadow-lg rounded-lg p-10 w-full max-w-6xl bg-base-200">
@@ -33,15 +85,22 @@ export default function Home() {
         </h1>
         <div className="flex flex-col md:flex-row">
           <div className="w-full md:w-2/3 md:pr-6 mb-6 md:mb-0">
-            <textarea
-              className="textarea textarea-bordered w-full h-[200px] md:h-[500px]"
-              placeholder="Enter text here"
-            ></textarea>
+            {!isSpeaking ? (
+              <textarea
+                className="textarea textarea-bordered w-full h-[200px] md:h-[500px]"
+                placeholder="Enter text here"
+                value={text}
+                onChange={e => setText(e.target.value)}
+              />
+            ) : (
+              <div className="textarea textarea-bordered w-full h-[200px] md:h-[500px]">
+                {renderHighlightedText()}
+              </div>
+            )}
           </div>
           <div className="w-full md:w-1/3 md:pl-6 flex items-center justify-center">
             <div className="p-6">
               <div className="form-control mb-6">
-
                 <label className="label">
                   <span className="label-text">Select language</span>
                 </label>
@@ -52,12 +111,12 @@ export default function Home() {
                   onChange={(e) => setLanguage(e.target.value)}
                 >
                   {languageOptions
-                    .sort((a: { code: string; name: string }, b: { code: string; name: string }) => {
-                      if (a.code === "") return -1; // "All Languages" stays at the top
+                    .sort((a, b) => {
+                      if (a.code === "") return -1;
                       if (b.code === "") return 1;
                       return a.name.localeCompare(b.name);
                     })
-                    .map((option: { code: string; name: string }) => (
+                    .map((option) => (
                       <option key={option.code} value={option.code}>
                         {option.name}
                       </option>
@@ -107,27 +166,16 @@ export default function Home() {
                 <button
                   id="speak-button"
                   className="btn btn-primary"
-                  onClick={() => {
-                    const textArea = document.querySelector("textarea");
-                    const selectedVoice = voices.find(
-                      (voice) => voice.name === (document.getElementById("voice-select") as HTMLSelectElement).value
-                    );
-                    const utterance = new SpeechSynthesisUtterance(textArea?.value);
-                    utterance.voice = selectedVoice || null;
-                    utterance.lang = selectedVoice?.lang || "";
-                    utterance.rate = rate;
-                    utterance.pitch = pitch;
-                    speechSynthesis.speak(utterance);
-                  }}
+                  onClick={handleSpeak}
+                  disabled={isSpeaking}
                 >
                   Speak
                 </button>
                 <button
                   id="stop-button"
                   className="btn btn-secondary"
-                  onClick={() => {
-                    speechSynthesis.cancel();
-                  }}
+                  onClick={handleStop}
+                  disabled={!isSpeaking}
                 >
                   Stop
                 </button>
