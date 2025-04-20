@@ -6,6 +6,7 @@ import { languageOptions } from "./language-options";
 export default function Home() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [language, setLanguage] = useState<string>("");
+  const [voiceFilter, setVoiceFilter] = useState<string>(""); // 新增名稱篩選
   const [rate, setRate] = useState<number>(1);
   const [pitch, setPitch] = useState<number>(1);
   const [text, setText] = useState<string>("");
@@ -19,10 +20,23 @@ export default function Home() {
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = speechSynthesis.getVoices();
-      const filteredVoices = language
+      // 先用語言碼篩選
+      let filteredVoices = language
         ? availableVoices.filter((voice) => voice.lang.startsWith(language))
         : availableVoices;
-      setVoices(filteredVoices);
+      // 如果語言篩選結果太少（如0），則用名稱關鍵字篩選
+      if (language && filteredVoices.length === 0) {
+        filteredVoices = availableVoices.filter((voice) =>
+          voice.name.toLowerCase().includes(language.toLowerCase())
+        );
+      }
+      // 若有額外名稱篩選，再進一步篩選
+      const finalVoices = voiceFilter
+        ? filteredVoices.filter((voice) =>
+          voice.name.toLowerCase().includes(voiceFilter.toLowerCase())
+        )
+        : filteredVoices;
+      setVoices(finalVoices);
     };
 
     if (speechSynthesis.onvoiceschanged !== undefined) {
@@ -30,7 +44,7 @@ export default function Home() {
     }
 
     loadVoices();
-  }, [language]);
+  }, [language, voiceFilter]);
 
   useEffect(() => {
     // 當 highlight 變動時自動滾動
@@ -186,6 +200,18 @@ export default function Home() {
                       </option>
                     ))}
                 </select>
+
+                <label className="label">
+                  <span className="label-text">Filter Voice Name</span>
+                </label>
+                <input
+                  type="text"
+                  className="input input-bordered mb-2"
+                  placeholder="Type voice name..."
+                  value={voiceFilter}
+                  onChange={e => setVoiceFilter(e.target.value)}
+                  disabled={isSpeaking}
+                />
 
                 <label className="label">
                   <span className="label-text">Select Voice</span>
