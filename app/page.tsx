@@ -208,7 +208,7 @@ export default function Home() {
                 <input
                   type="range"
                   min="0.5"
-                  max="3"
+                  max="2"
                   step="0.1"
                   value={rate}
                   onChange={(e) => setRate(parseFloat(e.target.value))}
