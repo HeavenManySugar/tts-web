@@ -13,6 +13,8 @@ export default function Home() {
   const [isPaused, setIsPaused] = useState(false);
   const [highlight, setHighlight] = useState<{ start: number, end: number }>({ start: 0, end: 0 });
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const highlightContainerRef = useRef<HTMLDivElement>(null);
+  const markRef = useRef<HTMLMapElement>(null);
 
   useEffect(() => {
     const loadVoices = () => {
@@ -29,6 +31,26 @@ export default function Home() {
 
     loadVoices();
   }, [language]);
+
+  useEffect(() => {
+    // 當 highlight 變動時自動滾動
+    if (isSpeaking && markRef.current && highlightContainerRef.current) {
+      const mark = markRef.current;
+      const container = highlightContainerRef.current;
+      // 僅當高亮區塊存在時才滾動
+      if (mark && container) {
+        const markRect = mark.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        // 僅當高亮區塊超出可視範圍時才滾動
+        if (
+          markRect.top < containerRect.top ||
+          markRect.bottom > containerRect.bottom
+        ) {
+          mark.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    }
+  }, [highlight, isSpeaking]);
 
   const handleSpeak = () => {
     if (!text) return;
@@ -80,13 +102,39 @@ export default function Home() {
   const renderHighlightedText = () => {
     if (!text) return null;
     const { start, end } = highlight;
-    return (
-      <span>
-        {text.slice(0, start)}
-        <mark className="bg-yellow-300">{text.slice(start, end)}</mark>
-        {text.slice(end)}
-      </span>
-    );
+    let currentIndex = 0;
+    return text.split('\n').map((line, i, arr) => {
+      const lineStart = currentIndex;
+      const lineEnd = currentIndex + line.length;
+      let content;
+      if (end <= lineStart || start >= lineEnd) {
+        // 此行沒有高亮
+        content = <span key={i}>{line}</span>;
+      } else {
+        // 此行有高亮
+        const highlightStart = Math.max(start - lineStart, 0);
+        const highlightEnd = Math.min(end - lineStart, line.length);
+        content = (
+          <span key={i}>
+            {line.slice(0, highlightStart)}
+            <mark
+              className="bg-yellow-300"
+              ref={markRef}
+            >
+              {line.slice(highlightStart, highlightEnd)}
+            </mark>
+            {line.slice(highlightEnd)}
+          </span>
+        );
+      }
+      currentIndex += line.length + 1; // +1 for '\n'
+      return (
+        <span key={i}>
+          {content}
+          {i < arr.length - 1 && <br />}
+        </span>
+      );
+    });
   };
 
   return (
@@ -105,7 +153,10 @@ export default function Home() {
                 onChange={e => setText(e.target.value)}
               />
             ) : (
-              <div className="textarea textarea-bordered w-full h-[200px] md:h-[500px]">
+              <div
+                className="textarea textarea-bordered w-full h-[200px] md:h-[500px] overflow-auto"
+                ref={highlightContainerRef}
+              >
                 {renderHighlightedText()}
               </div>
             )}
@@ -157,7 +208,7 @@ export default function Home() {
                 <input
                   type="range"
                   min="0.5"
-                  max="2"
+                  max="3"
                   step="0.1"
                   value={rate}
                   onChange={(e) => setRate(parseFloat(e.target.value))}
