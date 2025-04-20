@@ -64,7 +64,6 @@ export default function Home() {
     setHighlight({ start: 0, end: 0 });
   };
 
-  // 將文字分割並高亮
   const renderHighlightedText = () => {
     if (!text) return null;
     const { start, end } = highlight;
@@ -109,6 +108,7 @@ export default function Home() {
                   className="select select-bordered"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
+                  disabled={isSpeaking}
                 >
                   {languageOptions
                     .sort((a, b) => {
@@ -126,7 +126,11 @@ export default function Home() {
                 <label className="label">
                   <span className="label-text">Select Voice</span>
                 </label>
-                <select id="voice-select" className="select select-bordered">
+                <select
+                  id="voice-select"
+                  className="select select-bordered"
+                  disabled={isSpeaking}
+                >
                   {voices.map((voice) => (
                     <option key={voice.name} value={voice.name}>
                       {voice.name} ({voice.lang})
@@ -145,6 +149,7 @@ export default function Home() {
                   value={rate}
                   onChange={(e) => setRate(parseFloat(e.target.value))}
                   className="range"
+                  disabled={isSpeaking}
                 />
                 <div className="text-center mt-2">Rate: {rate.toFixed(1)}</div>
 
@@ -159,6 +164,7 @@ export default function Home() {
                   value={pitch}
                   onChange={(e) => setPitch(parseFloat(e.target.value))}
                   className="range"
+                  disabled={isSpeaking}
                 />
                 <div className="text-center mt-2">Pitch: {pitch.toFixed(1)}</div>
               </div>
