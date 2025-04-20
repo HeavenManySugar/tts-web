@@ -10,6 +10,7 @@ export default function Home() {
   const [pitch, setPitch] = useState<number>(1);
   const [text, setText] = useState<string>("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [highlight, setHighlight] = useState<{ start: number, end: number }>({ start: 0, end: 0 });
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -46,6 +47,7 @@ export default function Home() {
     };
     utterance.onend = () => {
       setIsSpeaking(false);
+      setIsPaused(false);
       setHighlight({ start: 0, end: 0 });
     };
     utterance.onboundary = (event: SpeechSynthesisEvent) => {
@@ -58,9 +60,20 @@ export default function Home() {
     speechSynthesis.speak(utterance);
   };
 
+  const handlePauseResume = () => {
+    if (isPaused) {
+      speechSynthesis.resume();
+      setIsPaused(false);
+    } else {
+      speechSynthesis.pause();
+      setIsPaused(true);
+    }
+  };
+
   const handleStop = () => {
     speechSynthesis.cancel();
     setIsSpeaking(false);
+    setIsPaused(false);
     setHighlight({ start: 0, end: 0 });
   };
 
@@ -176,6 +189,14 @@ export default function Home() {
                   disabled={isSpeaking}
                 >
                   Speak
+                </button>
+                <button
+                  id="pause-resume-button"
+                  className="btn btn-warning"
+                  onClick={handlePauseResume}
+                  disabled={!isSpeaking}
+                >
+                  {isPaused ? "Resume" : "Pause"}
                 </button>
                 <button
                   id="stop-button"
