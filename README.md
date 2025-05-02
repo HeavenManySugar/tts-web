@@ -41,7 +41,7 @@ TTS Web 是一個基於 Next.js 的文字轉語音應用程式，提供多語言
 
 ## 部署
 
-此專案已配置 GitHub Actions，支持自動部署到 GitHub Pages。
+此專案已配置 GitHub Actions，支持自動部署到 GitHub Pages。也可以透過 [GitHub Pages](https://ruien.me/tts-web/) 打開。
 
 ## 文件結構
 
