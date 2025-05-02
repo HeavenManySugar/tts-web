@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TTS Web
 
-## Getting Started
+TTS Web 是一個基於 Next.js 的文字轉語音應用程式，提供多語言支持和語音選擇功能。
 
-First, run the development server:
+## 功能
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 支持多語言的文字轉語音功能。
+- 調整語速和音調。
+- 支持語音篩選功能。
+- 高亮顯示正在朗讀的文字。
+
+## 技術棧
+
+- **框架**: [Next.js](https://nextjs.org/)
+- **前端**: [React](https://reactjs.org/)
+- **樣式**: [Tailwind CSS](https://tailwindcss.com/) 和 [DaisyUI](https://daisyui.com/)
+- **語音 API**: 瀏覽器內建的 SpeechSynthesis API
+
+## 安裝與運行
+
+1. 克隆此專案：
+
+   ```bash
+   git clone <repository-url>
+   cd tts-web
+   ```
+
+2. 安裝依賴：
+
+   ```bash
+   npm install
+   ```
+
+3. 啟動開發伺服器：
+
+   ```bash
+   npm run dev
+   ```
+
+4. 在瀏覽器中打開 [http://localhost:3000](http://localhost:3000)。
+
+## 部署
+
+此專案已配置 GitHub Actions，支持自動部署到 GitHub Pages。
+
+## 文件結構
+
+```
+.
+├── app/
+│   ├── globals.css          # 全局樣式
+│   ├── language-options.tsx # 語言選項
+│   ├── layout.tsx           # 頁面佈局
+│   ├── page.tsx             # 主頁面
+├── .github/workflows/       # GitHub Actions 配置
+├── next.config.ts           # Next.js 配置
+├── package.json             # 項目依賴
+├── postcss.config.mjs       # PostCSS 配置
+├── tsconfig.json            # TypeScript 配置
+└── README.md                # 專案說明文件
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 授權
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+此專案採用 [Apache 2.0](./LICENSE) 授權。
